@@ -1,0 +1,195 @@
+
+text_sensor:
+  - platform: template
+    name: Uptime
+    id: uptime_human
+    icon: mdi:clock-start
+  
+  - platform: homeassistant
+    id: forecast
+    entity_id: sensor.vaervarsel
+    internal: True
+
+  - platform: homeassistant
+    id: sun
+    entity_id: sun.sun
+    internal: True
+    on_value: 
+      then:
+        - lambda: |-
+            id(forecast_raw).publish_state(id(forecast_raw).state);
+
+  - platform: homeassistant
+    id: forecast_raw
+    entity_id: weather.forecast_home
+    internal: True
+    on_value: 
+      then:
+        - lambda: |-
+            if (x == "partlycloudy") {
+              if (id(sun).state == "below_horizon") {
+                id(forecast_raw).publish_state("night-partly-cloudy");
+              }
+            }
+            if (x == "night-partly-cloudy") {
+              if (id(sun).state == "above_horizon") {
+                id(forecast_raw).publish_state("partlycloudy");
+              }
+            }
+  - platform: homeassistant
+    id: wind_direction
+    entity_id: sensor.vindmaler_direction
+    internal: True
+    filters:
+      - to_upper:
+
+sensor:
+  - platform: uptime
+    name: Uptime Sensor
+    internal: True
+    id: uptime_sensor
+    update_interval: 60s
+    icon: mdi:clock-start
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              return (
+                (days ? to_string(days) + "d " : "") +
+                (hours ? to_string(hours) + "h " : "") +
+                (minutes ? to_string(minutes) + "m" : "")
+              ).c_str();
+
+
+  - platform: homeassistant
+    id: out_temp
+    entity_id: sensor.utendors_temperature
+    internal: True
+    on_value: 
+      then:
+        - component.update: temp_color
+        - component.update: main_display
+  - platform: homeassistant
+    id: pressure
+    entity_id: sensor.stua_pressure
+    internal: True
+  - platform: homeassistant
+    id: wind
+    entity_id: sensor.vindmaler_wind_strength
+    internal: True
+  - platform: homeassistant
+    id: gusts
+    entity_id: sensor.vindmaler_gust_strength
+    internal: True
+  - platform: homeassistant
+    id: rain_now
+    entity_id: sensor.regnmaler_rain
+    internal: True
+  - platform: homeassistant
+    id: rain_last_hour
+    entity_id: sensor.regnmaler_rain_last_hour
+    internal: True
+  - platform: homeassistant
+    id: rain_today
+    entity_id: sensor.regnmaler_rain_today
+    internal: True
+  - platform: homeassistant
+    internal: True
+    id: out_max
+    entity_id: input_number.ute_max
+  - platform: homeassistant
+    internal: True
+    id: out_min
+    entity_id: input_number.ute_min
+  - platform: homeassistant
+    internal: True
+    id: stua_temp
+    entity_id: sensor.stua_temperature
+    on_value: 
+      then:
+        - component.update: temp_stua_color
+        - component.update: main_display
+  - platform: homeassistant
+    internal: True
+    id: stua_co2
+    entity_id: sensor.stua_co2
+  - platform: homeassistant
+    internal: True
+    id: stua_noise
+    entity_id: sensor.stua_noise
+  - platform: homeassistant
+    internal: True
+    id: stua_humidity
+    entity_id: sensor.stua_humidity
+  - platform: homeassistant
+    internal: True
+    id: humidity
+    entity_id: sensor.utendors_humidity
+    
+    
+  - platform: template
+    name: "Temperature outside color"
+    id: temp_color
+    lambda: |-
+      if (id(out_temp).state >= 30) {
+        return uint32_t(0xfb582f);
+      } else if (id(out_temp).state >= 25) {
+        return uint32_t(0xfd9728);
+      } else if (id(out_temp).state >= 20) {
+        return uint32_t(0xfdc12f);
+      } else if (id(out_temp).state >= 15) {
+        return uint32_t(0x8cc051);
+      } else if (id(out_temp).state >= 10) {
+        return uint32_t(0x2d9a2d);
+      } else if (id(out_temp).state >= 5) {
+        return uint32_t(0x159588);
+      } else if (id(out_temp).state >= 0) {
+        return uint32_t(0x1ebdd0);
+      } else if (id(out_temp).state >= -5) {
+        return uint32_t(0x1daaf1);
+      } else if (id(out_temp).state >= -10) {
+        return uint32_t(0x587cf7);
+      } else if (id(out_temp).state >= -15) {
+        return uint32_t(0x4055b2);
+      } else if (id(out_temp).state >= -20) {
+        return uint32_t(0x663fb4);
+      } else if (id(out_temp).state >= -25) {
+        return uint32_t(0x9c2fae);
+      } else {
+        return uint32_t(0x9c2fae);
+      }
+    internal: True
+
+  - platform: template
+    name: "Temperature stua color"
+    id: temp_stua_color
+    lambda: |-
+      if (id(stua_temp).state >= 26) {
+        return uint32_t(0xF94144);
+      } else if (id(stua_temp).state >= 24) {
+        return uint32_t(0xF3722C);
+      } else if (id(stua_temp).state >= 23) {
+        return uint32_t(0xF8961E);
+      } else if (id(stua_temp).state >= 22.5) {
+        return uint32_t(0xF9844A);
+      } else if (id(stua_temp).state >= 22) {
+        return uint32_t(0xF9C74F);
+      } else if (id(stua_temp).state >= 21.5) {
+        return uint32_t(0x90BE6D);
+      } else if (id(stua_temp).state >= 21) {
+        return uint32_t(0x43AA8B);
+      } else if (id(stua_temp).state >= 20) {
+        return uint32_t(0x4D908E);
+      } else if (id(stua_temp).state >= 19) {
+        return uint32_t(0x577590);
+      } else {
+        return uint32_t(0x277DA1);
+      }
+    internal: True
