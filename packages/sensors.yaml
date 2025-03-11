@@ -1,0 +1,24 @@
+
+# Add standard sensors
+sensor:
+  # WiFi Signal sensor.
+  - platform: wifi_signal
+    name: WiFi Signal
+  # Uptime sensor
+  - platform: uptime
+    id: uptime_counter
+    name: Uptime
+  # Internal temperature
+  - platform: internal_temperature
+    name: "Internal Temperature"
+
+text_sensor:
+  # Expose ESPHome version as sensor.
+  - platform: version
+    name: ESPHome Version
+  # Expose WiFi information as sensors.
+  - platform: wifi_info
+    ip_address:
+      name: IP
+    ssid:
+      name: SSID
