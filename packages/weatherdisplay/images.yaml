@@ -1,0 +1,9 @@
+image:
+  - file: mdi:arrow-up-bold
+    id: mdi_max
+    type: grayscale
+    resize: ${mdi_max_min_size}
+  - file: mdi:arrow-down-bold
+    id: mdi_min
+    type: grayscale
+    resize: ${mdi_max_min_size}
