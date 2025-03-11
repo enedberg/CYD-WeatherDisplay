@@ -1,0 +1,12 @@
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: false
+  project: 
+    name: "nedberg.weather-display"
+    version: '0.2b'
+  on_boot: 
+    then:
+      - light.turn_on: 
+          id: backlight
+          brightness: 70%
