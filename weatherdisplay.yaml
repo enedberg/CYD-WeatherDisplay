@@ -1,0 +1,104 @@
+substitutions:
+  name: yellowtft1
+  friendly_name: Yellow TFT 1
+  font_title_size: "60"
+  font_std_size: "30"
+  font_medium_size: "18"
+  font_small_size: "12"
+  font_mdi_large_size: "96"
+  font_mdi_medium_size: "60"
+  mdi_max_min_size: "18x18"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+packages:
+  common: !include packages/common.yaml
+  web_server: !include packages/web_server.yaml
+  sensors: !include packages/sensors.yaml
+  weatherdisplay_common: !include packages/weatherdisplay/common.yaml
+  weatherdisplay_display: !include packages/weatherdisplay/display.yaml
+  weatherdisplay_fonts: !include packages/weatherdisplay/fonts.yaml
+  weatherdisplay_sensors: !include packages/weatherdisplay/sensors.yaml
+  weatherdisplay_colors: !include packages/weatherdisplay/colors.yaml
+  weatherdisplay_images: !include packages/weatherdisplay/images.yaml
+
+# Enable logging of errors only
+logger:
+  logs:
+    component: ERROR
+
+light:
+  - platform: monochromatic
+    output: backlight_pwm
+    name: Display Backlight
+    id: backlight
+    restore_mode: ALWAYS_ON
+  - platform: rgb
+    name: "Backside LED"
+    id: backside_led
+    red: red_led
+    green: green_led
+    blue: blue_led
+    restore_mode: ALWAYS_OFF
+
+sensor:
+  - platform: adc
+    pin: GPIO34
+    id: board_ldr
+    name: "LDR - Light Sensor"
+    update_interval: 10000ms
+    entity_category: "diagnostic"
+
+# ============================================================ 
+# Hardware related setup
+#
+# Setup SPI for the display. The ESP32-2432S028R uses separate SPI buses for display and touch
+spi:
+  - id: display_spi
+    clk_pin: GPIO14
+    mosi_pin: GPIO13
+    miso_pin: GPIO12
+  - id: touch
+    clk_pin: GPIO25
+    mosi_pin: GPIO32
+    miso_pin: GPIO39
+
+# Setup a pin to control the backlight
+output:
+  - platform: ledc
+    pin: GPIO21
+    id: backlight_pwm
+  - platform: ledc
+    pin: GPIO4
+    id: red_led
+    inverted: True
+  - platform: ledc
+    pin: GPIO16
+    id: green_led
+    inverted: True
+  - platform: ledc
+    pin: GPIO17
+    id: blue_led
+    inverted: True
+
+# Setup the ili9xxx platform
+# Display is used as 240x320 by default so we rotate it to 270°
+display:
+  - platform: ili9xxx
+    id: !extend main_display
+    model: ili9341
+    # 8bit lagt til etter ESPHome 2025.2.0
+    color_palette: 8BIT
+    cs_pin: GPIO15
+    dc_pin: GPIO2
+    dimensions:
+      height: 240
+      width: 320
+    transform:
+      swap_xy: true
+      mirror_y: true
+      mirror_x: true
+    invert_colors: false
