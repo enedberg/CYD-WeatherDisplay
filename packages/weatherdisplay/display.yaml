@@ -1,0 +1,97 @@
+
+display:
+  - platform: ili9xxx
+    id: main_display
+    spi_id: display_spi
+    lambda: |-
+      
+      int y_1 = it.get_height() / 4;
+      int y_2 = it.get_height() * 5 / 16;
+      int y_3 = it.get_height() * 25 / 64;
+      int y_4 = it.get_height() * 9 / 16;
+      int y_5 = it.get_height() * 23 / 32;
+      int y_6 = it.get_height() * 27 / 32;
+      int y_7 = it.get_height() * 31 / 32;
+
+
+      int x_1 = it.get_width() * 3 / 32;
+      int x_2 = it.get_width() * 5 / 24;
+      int x_3 = it.get_width() / 3;
+      int x_4 = it.get_width() * 11 / 24;
+      int x_5 = it.get_width() * 17 / 32;
+      int x_6 = it.get_width() * 2 / 3;
+      int x_7 = it.get_width() * 5 / 6;
+
+      std::map<std::string, std::string> weather_icon_map
+        {
+          {"cloudy", "\U000F0590"},
+          {"cloudy-alert", "\U000F0F2F"},
+          {"cloudy-arrow-right", "\U000F0E6E"},
+          {"fog", "\U000F0591"},
+          {"hail", "\U000F0592"},
+          {"hazy", "\U000F0F30"},
+          {"hurricane", "\U000F0898"},
+          {"lightning", "\U000F0593"},
+          {"lightning-rainy", "\U000F067E"},
+          {"night", "\U000F0594"},
+          {"night-partly-cloudy", "\U000F0F31"},
+          {"partlycloudy", "\U000F0595"},
+          {"partly-lightning", "\U000F0F32"},
+          {"partly-rainy", "\U000F0F33"},
+          {"partly-snowy", "\U000F0F34"},
+          {"partly-snowy-rainy", "\U000F0F35"},
+          {"pouring", "\U000F0596"},
+          {"rainy", "\U000F0597"},
+          {"snowy", "\U000F0598"},
+          {"snowy-heavy", "\U000F0F36"},
+          {"snowy-rainy", "\U000F067F"},
+          {"sunny", "\U000F0599"},
+          {"sunny-alert", "\U000F0F37"},
+          {"sunny-off", "\U000F14E4"},
+          {"sunset", "\U000F059A"},
+          {"sunset-down", "\U000F059B"},
+          {"sunset-up", "\U000F059C"},
+          {"tornado", "\U000F0F38"},
+          {"windy", "\U000F059D"},
+          {"windy-variant", "\U000F059E"},
+          {"clear-night", "\U000F0594"},
+          {"exceptional", "\U000F0F37"},
+        };
+
+
+      it.fill(id(my_black));
+      it.line(x_6, 0, x_6, it.get_height(), id(my_gray));
+      it.line(x_6, it.get_height()/2, it.get_width(), it.get_height()/2, id(my_gray));
+
+      // Temperatur ute + min og max
+      it.printf(x_3, y_2, id(font_title), Color(id(temp_color).state), TextAlign::BOTTOM_CENTER, "%.1f°C", id(out_temp).state);
+      it.printf(x_2, y_3, id(Roboto_medium), TextAlign::BOTTOM_CENTER, "%.1f°C", id(out_min).state);
+      it.image(x_2-40, y_3-3, id(mdi_min), ImageAlign::BOTTOM_RIGHT);
+      it.printf(x_4, y_3, id(Roboto_medium), TextAlign::BOTTOM_CENTER, "%.1f°C", id(out_max).state);
+      it.image(x_4+40, y_3-3, id(mdi_max), ImageAlign::BOTTOM_LEFT);
+
+      // Værvarsel
+      it.print(x_3, y_4, id(font_std), TextAlign::BOTTOM_CENTER, id(forecast).state.c_str());
+
+      // Rain
+      it.printf(x_1, y_5, id(Roboto_small), TextAlign::BOTTOM_CENTER, "%.1fmm", id(rain_now).state);
+      it.printf(x_1, y_6, id(Roboto_small), TextAlign::BOTTOM_CENTER, "%.1fmm", id(rain_last_hour).state);
+      it.printf(x_1, y_7, id(Roboto_small), TextAlign::BOTTOM_CENTER, "%.1fmm", id(rain_today).state);
+      // Wind
+      it.printf(x_3, y_5, id(Roboto_small), TextAlign::BOTTOM_CENTER, "%.1fm/s", id(wind).state);
+      it.printf(x_3, y_6, id(Roboto_small), TextAlign::BOTTOM_CENTER, "%.1fm/s", id(gusts).state);
+      it.print(x_3, y_7, id(Roboto_small), TextAlign::BOTTOM_CENTER, id(wind_direction).state.c_str());
+      // Pressuree, humidity
+      it.printf(x_5, y_5, id(Roboto_small), TextAlign::BOTTOM_CENTER, "%.0fmbar", id(pressure).state);
+      it.printf(x_5, y_6, id(Roboto_small), TextAlign::BOTTOM_CENTER, "%.0f%%", id(humidity).state);
+
+      // Weather Icon
+      it.printf(x_7, y_1, id(font_mdi_large), TextAlign::CENTER, weather_icon_map[id(forecast_raw).state.c_str()].c_str());
+
+      // Stua
+      it.printf(x_7, y_5, id(font_std), Color(id(temp_stua_color).state), TextAlign::BOTTOM_CENTER, "%.1f°C", id(stua_temp).state);
+      it.printf(x_7, y_6, id(Roboto_small), TextAlign::BOTTOM_CENTER, "%.0fppm", id(stua_co2).state);
+      it.printf(x_7, y_7, id(Roboto_small), TextAlign::BOTTOM_CENTER, "%.0f%%", id(stua_humidity).state);
+
+
+      // it.printf(it.get_width()/2-120, it.get_height(), id(Roboto_medium), TextAlign::BOTTOM_CENTER, "Internal: %.1f°C", id(int_temp).state);
