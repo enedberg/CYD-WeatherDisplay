@@ -1,0 +1,8 @@
+
+# Web server with info
+web_server:
+  port: 80
+  auth:
+    username: !secret web_server_username
+    password: !secret web_server_password
+  version: 3
