@@ -1,0 +1,110 @@
+substitutions:
+  name: "weatherdisplay35"
+  friendly_name: Weather Display 3.5
+  font_title_size: "80"
+  font_std_size: "40"
+  font_medium_size: "24"
+  font_small_size: "22"
+  font_mdi_large_size: "124"
+  font_mdi_medium_size: "60"
+  mdi_max_min_size: "24x24"
+
+esp32:
+  board: esp32-s3-devkitc-1
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+
+# external_components:
+#    - source: github://buglloc/esphome-components
+#      components: [ axs15231 ]
+#      refresh: 10min
+
+packages:
+  common: !include packages/common.yaml
+  web_server: !include packages/web_server.yaml
+  sensors: !include packages/sensors.yaml
+  weatherdisplay_common: !include packages/weatherdisplay/common.yaml
+  weatherdisplay_display: !include packages/weatherdisplay/display.yaml
+  weatherdisplay_fonts: !include packages/weatherdisplay/fonts.yaml
+  weatherdisplay_sensors: !include packages/weatherdisplay/sensors.yaml
+  weatherdisplay_colors: !include packages/weatherdisplay/colors.yaml
+  weatherdisplay_images: !include packages/weatherdisplay/images.yaml
+
+# Enable logging of errors only
+logger:
+  logs:
+    component: ERROR
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+
+spi:
+  id: display_spi
+  type: quad
+  clk_pin: 47
+  data_pins: 
+    - 21
+    - 48
+    - 40
+    - 39
+
+i2c:
+  sda: 4
+  scl: 8
+  id: touchscreen_bus
+
+globals:
+  - id: bgcolor
+    type: Color
+    initial_value: "Color::random_color()"
+
+output:
+  - platform: ledc
+    pin: GPIO01
+    id: gpio_backlight_pwm
+
+# Define a monochromatic, dimmable light for the backlight
+light:
+  - platform: monochromatic
+    output: gpio_backlight_pwm
+    name: "Display Backlight"
+    id: backlight
+    restore_mode: ALWAYS_ON
+
+display:
+  - platform: qspi_dbi
+    model: axs15231
+    id: !extend main_display
+    data_rate: 40MHz #20mhz is default
+    cs_pin: 45
+    dimensions:
+      height: 480
+      width: 320
+    # transform:
+    #   swap_xy: false
+    rotation: 90
+    auto_clear_enabled: false
+
+
+touchscreen:
+  - platform: axs15231
+    id: main_touch
+    display: main_display
+    i2c_id: touchscreen_bus
+    transform:
+      swap_xy: true
+    on_touch:
+      - lambda: |-
+          Color newColor;
+          do { newColor =  Color::random_color(); } while (newColor == id(bgcolor));
+          id(bgcolor) = newColor;
+
+          ESP_LOGI("cal", "x=%d, y=%d, x_raw=%d, y_raw=%0d",
+            touch.x,
+            touch.y,
+            touch.x_raw,
+            touch.y_raw
+          );
